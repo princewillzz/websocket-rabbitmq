@@ -1,13 +1,10 @@
 package com.untanglechat.chatapp.controller;
 
-import java.util.List;
 import java.util.UUID;
 
 import com.untanglechat.chatapp.models.MessageModel;
-import com.untanglechat.chatapp.repository.MessageRepository;
 import com.untanglechat.chatapp.services.MessagingService;
 
-import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
@@ -16,18 +13,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 
 
 @RestController
 public class TestController {
 
-    @Autowired
-    public MessageRepository mrepo;
 
     @Autowired
     RabbitTemplate rabbitTemplate;
@@ -79,17 +73,17 @@ public class TestController {
     }
     
 
-    @GetMapping(value = "/messages")
-    public Object getMethodName() {
+    // @GetMapping(value = "/messages")
+    // public Object getMethodName() {
 
-        System.out.println("exchange" + this.exchange);
+    //     System.out.println("exchange" + this.exchange);
 
-        // MessageModel msg = new MessageModel();
-        // msg.setId(UUID.randomUUID().toString());
-        // msg.setMessage("message");
+    //     // MessageModel msg = new MessageModel();
+    //     // msg.setId(UUID.randomUUID().toString());
+    //     // msg.setMessage("message");
 
-        // mrepo.save(msg).subscribe();
-        return mrepo.findAll();
-    }
+    //     // mrepo.save(msg).subscribe();
+    //     return mrepo.findAll();
+    // }
 
 }

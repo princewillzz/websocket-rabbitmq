@@ -1,11 +1,7 @@
 package com.untanglechat.chatapp.services;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.untanglechat.chatapp.configuration.MessageListenerContainerFactory;
 import com.untanglechat.chatapp.models.MessageModel;
-import com.untanglechat.chatapp.repository.MessageRepository;
 
 import org.springframework.amqp.core.MessageListener;
 import org.springframework.amqp.core.Queue;
@@ -26,8 +22,6 @@ public class ChatWebsocketHandler implements WebSocketHandler{
     @Value("${spring.rabbitmq.template.exchange}")
     String exchange;
 
-    @Autowired
-    private MessageRepository mRepo;
 
     @Autowired
     private MessagingService messagingService;

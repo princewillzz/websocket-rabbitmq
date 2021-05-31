@@ -1,14 +1,8 @@
 package com.untanglechat.chatapp.models;
 
-import java.time.Instant;
 import java.util.Date;
 
-import javax.annotation.PostConstruct;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,10 +12,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Document(collection = "message")
+// @Document(collection = "message")
 public class MessageModel {
 
-    @Id
+    // @Id
     private String id;
     private String message;
     private String type;
