@@ -47,13 +47,13 @@ public class ChatWebsocketHandler implements WebSocketHandler{
         System.err.println("session id: ==> "+session.getId());
         
         // Create queue
-        final String queueName = "q3";
-        // final String queueName = "q"+Math.round(Math.random()*20);//session.getId();
+        // final String queueName = "q3";
+        final String queueName = "q"+Math.round(Math.random()*20);//session.getId();
         final String ROUTING_KEY = queueName;
 
-        // Queue queue = new Queue(queueName, false);
-        // messagingService.createQueue(queue);
-        // messagingService.binding(queue, new TopicExchange(this.exchange), ROUTING_KEY);
+        Queue queue = new Queue(queueName, false);
+        messagingService.createQueue(queue);
+        messagingService.binding(queue, new TopicExchange(this.exchange), ROUTING_KEY);
 
 
 
@@ -76,7 +76,6 @@ public class ChatWebsocketHandler implements WebSocketHandler{
 
         return session.send(
             f.map(msg -> session.textMessage(msg))
-            // mRepo.findAll().map(msg -> session.textMessage(msg.toString()))
         ).and(session.receive()
             .map(msg -> {
                 MessageModel m = new MessageModel();
@@ -87,7 +86,7 @@ public class ChatWebsocketHandler implements WebSocketHandler{
                 return messagingService.sendMessage(message, this.exchange, ROUTING_KEY);
             })
         ).doFinally(signalType -> {
-            // messagingService.deleteQueue(queue);
+            messagingService.deleteQueue(queue);
         }).log();
 
     }
