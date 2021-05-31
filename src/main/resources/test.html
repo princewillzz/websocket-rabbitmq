@@ -70,14 +70,15 @@
 
 
             ws.onmessage = function(e) {
-                console.log("Message", e.data)
+                console.log("Message", e.data, typeof(e.data))
                 const data = JSON.parse(e.data)
+                // console.log(data, typeof(data))
                 
-                const element = document.createElement('li')
-                element.className = "list-group-item"
-                element.innerHTML = `${new Date(data.sentTime).toLocaleTimeString()} => ${data.message}`
+                // const element = document.createElement('li')
+                // element.className = "list-group-item"
+                // element.innerHTML = `${new Date(data.sentTime).toLocaleTimeString()} => ${data.message}`
 
-                document.querySelector('.list-group').prepend(element)
+                // document.querySelector('.list-group').prepend(element)
             }
 
 

@@ -4,6 +4,9 @@ import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,10 +15,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-// @Document(collection = "message")
-public class MessageModel {
+@Document(collection = "message")
+public class MessageInfoModel {
 
-    // @Id
+    @Id
     private String id;
     private String message;
     private String type;
@@ -24,5 +27,6 @@ public class MessageModel {
     private String sentBy;
     private String sentTo;
 
+    private String routingKey;
     
 }

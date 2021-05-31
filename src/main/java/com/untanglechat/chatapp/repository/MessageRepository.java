@@ -1,9 +1,13 @@
-// package com.untanglechat.chatapp.repository;
+package com.untanglechat.chatapp.repository;
 
-// import com.untanglechat.chatapp.models.MessageModel;
+import com.untanglechat.chatapp.models.MessageInfoModel;
 
-// import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 
-// public interface MessageRepository extends ReactiveMongoRepository<MessageModel, String> {
+import reactor.core.publisher.Flux;
 
-// }
+public interface MessageRepository extends ReactiveMongoRepository<MessageInfoModel, String> {
+
+    Flux<MessageInfoModel> findAllByRoutingKey(String routingKey);
+ 
+}

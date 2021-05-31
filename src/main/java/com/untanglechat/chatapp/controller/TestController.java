@@ -2,7 +2,9 @@ package com.untanglechat.chatapp.controller;
 
 import java.util.UUID;
 
-import com.untanglechat.chatapp.models.MessageModel;
+import com.untanglechat.chatapp.dto.MessageDTO;
+import com.untanglechat.chatapp.models.MessageInfoModel;
+import com.untanglechat.chatapp.repository.MessageRepository;
 import com.untanglechat.chatapp.services.MessagingService;
 
 import org.springframework.amqp.core.Queue;
@@ -34,14 +36,16 @@ public class TestController {
 
     @Value("${spring.rabbitmq.template.exchange}")
     String exchange;
+
+    @Autowired
+    private MessageRepository messageRepository;
     
 
 
     @PostMapping(value="/publish/{queue}")
     public Object postMethodName(@PathVariable("queue")String queueName, @RequestBody String entity) {
         
-        MessageModel message = new MessageModel();
-        message.setId(UUID.randomUUID().toString());
+        MessageDTO message = new MessageDTO();
         message.setMessage(entity);
 
         var queueInfo = rabbitAdmin.getQueueInfo(queueName);
@@ -57,7 +61,7 @@ public class TestController {
 
             Queue queue = new Queue(queueName, false);
             messagingService.createQueue(queue);
-            messagingService.binding(queue, new TopicExchange(this.exchange), ROUTING_KEY);
+            messagingService.bindingQueueWithRoutingKey(queue, new TopicExchange(this.exchange), ROUTING_KEY);
             // rabbitAdmin.declareQueue(queue);
 
             // rabbitAdmin.declareBinding(messagingService.binding(queue, new TopicExchange("exchange_secret"), ROUTING_KEY));
@@ -66,24 +70,35 @@ public class TestController {
         
 
         System.out.println("OUR exhange: "+ this.exchange);
-        messagingService.sendMessage(message, this.exchange, ROUTING_KEY);
+        messagingService.sendMessage(message, this.exchange, ROUTING_KEY, queueName);
 
         
         return message;
     }
     
 
-    // @GetMapping(value = "/messages")
-    // public Object getMethodName() {
 
-    //     System.out.println("exchange" + this.exchange);
 
-    //     // MessageModel msg = new MessageModel();
-    //     // msg.setId(UUID.randomUUID().toString());
-    //     // msg.setMessage("message");
+    @GetMapping(value = "/messages")
+    public Object getMethodName() {
 
-    //     // mrepo.save(msg).subscribe();
-    //     return mrepo.findAll();
-    // }
+        System.out.println("exchange" + this.exchange);
+
+        // MessageInfoModel msg = new MessageInfoModel();
+        // msg.setMessage("message");
+        // msg.setRoutingKey("123");
+
+        // messageRepository.save(msg).subscribe();
+        // messageRepository.findAllByRoutingKey("123").subscribe(item -> {
+        //     System.out.println(item);
+        // });
+
+        messagingService.getAllMessageWithRoutingKey("123").subscribe(it -> {
+            System.out.println(it);
+        });
+        
+
+        return "{done}";
+    }
 
 }

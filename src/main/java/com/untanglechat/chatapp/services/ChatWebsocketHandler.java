@@ -1,34 +1,36 @@
 package com.untanglechat.chatapp.services;
 
-import com.untanglechat.chatapp.configuration.MessageListenerContainerFactory;
-import com.untanglechat.chatapp.models.MessageModel;
+import javax.annotation.PostConstruct;
 
-import org.springframework.amqp.core.MessageListener;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.untanglechat.chatapp.dto.MessageDTO;
+
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
-import org.springframework.amqp.rabbit.listener.MessageListenerContainer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.WebSocketSession;
 
-import reactor.core.publisher.Flux;
+import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 @Component
+@RequiredArgsConstructor
 public class ChatWebsocketHandler implements WebSocketHandler{
 
     @Value("${spring.rabbitmq.template.exchange}")
     String exchange;
 
 
-    @Autowired
-    private MessagingService messagingService;
+    private final MessagingService messagingService;
 
+    private ObjectMapper objectMapper;
 
-    @Autowired
-    private MessageListenerContainerFactory messageListenerContainerFactory;
+    @PostConstruct
+    private void postConstruct() {
+        this.objectMapper = new ObjectMapper();
+    }
 
 
 
@@ -42,46 +44,66 @@ public class ChatWebsocketHandler implements WebSocketHandler{
         
         // Create queue
         // final String queueName = "q3";
-        final String queueName = "q"+Math.round(Math.random()*20);//session.getId();
+        final String queueName = "q3";//+Math.round(Math.random()*20);//session.getId();
         final String ROUTING_KEY = queueName;
 
         Queue queue = new Queue(queueName, false);
         messagingService.createQueue(queue);
-        messagingService.binding(queue, new TopicExchange(this.exchange), ROUTING_KEY);
+        messagingService.bindingQueueWithRoutingKey(queue, new TopicExchange(this.exchange), ROUTING_KEY);
+        
 
+        System.out.println(session.isOpen());
+        System.out.println(session.getHandshakeInfo());
 
+        return session
+            .send(
+                // Stream data from its concerned queue through web socket
+                messagingService.incomingMessageFlow(queueName).map(session::textMessage)
+            )
+            .and(
+                // TODO :- send it to the queue instead of the client 
+                // send all the data from the database to the queue 
 
-        final MessageListenerContainer mlc = messageListenerContainerFactory.createMessageListenerContainer(queueName);
+                // Currently sending to the channel
+                session.send(messagingService.getAllMessageWithRoutingKey("123")
+                    .map(msg -> {
+                        try {
+                            return session.textMessage(objectMapper.writeValueAsString(msg));
+                        } catch (Exception e) {
+                            System.err.println(e.getMessage());
+                            return null;
+                        }
+                        
+                    }).filter(msg -> msg != null)
+                )
+            )
+            .and(
+                session.receive()
+                .map(msg -> {
 
-        Flux<String> f = Flux.<String> create(emitter -> {
-            mlc.setupMessageListener((MessageListener) m -> {
-                String payload = new String(m.getBody());
-                System.out.println(payload);
-                emitter.next(payload);
-            });
-            emitter.onRequest(v -> {
-                mlc.start();	
-            });
-            emitter.onDispose(() -> {
-                mlc.stop();
-            });
-        });
+                    // After the frontend sends the whole object
+                    // System.out.println("Payload received: " + msg.getPayloadAsText());
+                    // try {
+                    //     var o =  objectMapper.readValue(msg.getPayloadAsText(), MessageDTO.class);
+                    //     System.err.println("payload to obj: ===> " + o);
+                    // } catch (Exception e) {
+                    //     //TODO: handle exception
+                    //     System.out.println(e.getMessage());
+                    // }
 
+                    MessageDTO m = new MessageDTO();
+                    m.setMessage(msg.getPayloadAsText());
+                    return m;
+                }).flatMap(message -> {
+                    return messagingService.sendMessage(message, this.exchange, ROUTING_KEY, queueName);
+                })
+            ).doFinally(signalType -> {
+                
+                // Delete my queue
+                messagingService.deleteQueue(queue);
 
-        return session.send(
-            f.map(msg -> session.textMessage(msg))
-        ).and(session.receive()
-            .map(msg -> {
-                MessageModel m = new MessageModel();
-                m.setMessage(msg.getPayloadAsText());
-                return m;
-            }).flatMap(message -> {
-
-                return messagingService.sendMessage(message, this.exchange, ROUTING_KEY);
-            })
-        ).doFinally(signalType -> {
-            messagingService.deleteQueue(queue);
-        }).log();
+            }).log();
 
     }
+
 }
