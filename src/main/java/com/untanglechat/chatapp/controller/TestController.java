@@ -1,0 +1,95 @@
+package com.untanglechat.chatapp.controller;
+
+import java.util.List;
+import java.util.UUID;
+
+import com.untanglechat.chatapp.models.MessageModel;
+import com.untanglechat.chatapp.repository.MessageRepository;
+import com.untanglechat.chatapp.services.MessagingService;
+
+import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+
+
+
+@RestController
+public class TestController {
+
+    @Autowired
+    public MessageRepository mrepo;
+
+    @Autowired
+    RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    RabbitAdmin rabbitAdmin;
+
+    @Autowired
+    MessagingService messagingService;
+
+    @Value("${spring.rabbitmq.template.exchange}")
+    String exchange;
+    
+
+
+    @PostMapping(value="/publish/{queue}")
+    public Object postMethodName(@PathVariable("queue")String queueName, @RequestBody String entity) {
+        
+        MessageModel message = new MessageModel();
+        message.setId(UUID.randomUUID().toString());
+        message.setMessage(entity);
+
+        var queueInfo = rabbitAdmin.getQueueInfo(queueName);
+        String ROUTING_KEY = queueName;
+
+        if(queueInfo != null) {
+            
+            System.err.println("Queue present");
+            System.out.println(queueInfo);
+
+        } else {
+            System.err.println("No queue");
+
+            Queue queue = new Queue(queueName, false);
+            messagingService.createQueue(queue);
+            messagingService.binding(queue, new TopicExchange(this.exchange), ROUTING_KEY);
+            // rabbitAdmin.declareQueue(queue);
+
+            // rabbitAdmin.declareBinding(messagingService.binding(queue, new TopicExchange("exchange_secret"), ROUTING_KEY));
+            
+        }
+        
+
+        System.out.println("OUR exhange: "+ this.exchange);
+        messagingService.sendMessage(message, this.exchange, ROUTING_KEY);
+
+        
+        return message;
+    }
+    
+
+    @GetMapping(value = "/messages")
+    public Object getMethodName() {
+
+        System.out.println("exchange" + this.exchange);
+
+        // MessageModel msg = new MessageModel();
+        // msg.setId(UUID.randomUUID().toString());
+        // msg.setMessage("message");
+
+        // mrepo.save(msg).subscribe();
+        return mrepo.findAll();
+    }
+
+}

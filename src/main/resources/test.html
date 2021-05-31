@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!-- CSS only -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+<!-- JavaScript Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+
+<style>
+
+    ul li:first-child {
+    color: red;
+    font-weight: bold;
+    }
+
+</style>
+</head>
+<body>
+
+
+    <div class="container py-3 my-3">
+        <div class="input-group mb-3">
+            <input id="text" type="text" class="form-control" placeholder="text" aria-label="text" aria-describedby="basic-addon1">
+        </div>
+
+        
+        <div class="d-flex justify-content-between">
+            <button class="btn btn-primary" onclick="handleSend()">send</button>
+            <div>
+                <button class="btn btn-success mr-3" onclick="handleConnect()">connect</button>
+                <button class="btn btn-warning ml-3" onclick="handleDisConnect()">disconnect</button>
+                <button class="btn btn-danger ml-3" onclick="clearList()">clear list</button>
+            </div>
+        </div>
+
+        <ul class="list-group">
+        </ul>
+
+    </div>
+    
+
+    <script>
+        const clearList = () => {
+            console.clear()
+            console.log("clearing messages");
+            document.querySelectorAll(".list-group-item").forEach(item => {
+                item.remove()
+            })
+        }
+        window.onload = setTimeout(() => {
+            handleConnect()
+        }, 1000);
+
+        
+        var ws;
+        const handleConnect = () => {
+            console.log("Connecting");
+            ws = new WebSocket("ws://localhost:8080/websocket")
+            ws.onopen = function() {
+                console.log("Connected");
+            }
+            ws.onclose = function() {
+                console.log("Closed")
+                
+            }
+
+
+            ws.onmessage = function(e) {
+                console.log("Message", e.data)
+                const data = JSON.parse(e.data)
+                
+                const element = document.createElement('li')
+                element.className = "list-group-item"
+                element.innerHTML = `${new Date(data.sentTime).toLocaleTimeString()} => ${data.message}`
+
+                document.querySelector('.list-group').prepend(element)
+            }
+
+
+        }
+        const handleDisConnect = () => {
+            console.log("Disconnecting");
+            
+            
+            ws.close();
+        }
+        const handleSend = () => {
+            const data = document.getElementById("text").value;
+            console.log("data: ", data);
+            ws.send(data)
+
+        }
+    </script>
+</body>
+</html>
