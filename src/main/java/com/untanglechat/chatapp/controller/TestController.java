@@ -101,4 +101,7 @@ public class TestController {
         return "{done}";
     }
 
+    @GetMapping("/secured/auth/authenticate")
+    public String securedHello() {return "hello";}
+
 }

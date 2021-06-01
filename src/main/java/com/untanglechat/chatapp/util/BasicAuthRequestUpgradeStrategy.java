@@ -1,5 +1,12 @@
 package com.untanglechat.chatapp.util;
 
+ 
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.WebsocketServerSpec;
+
 import java.util.function.Supplier;
 
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
@@ -15,9 +22,8 @@ import org.springframework.web.reactive.socket.adapter.ReactorNettyWebSocketSess
 import org.springframework.web.reactive.socket.server.RequestUpgradeStrategy;
 import org.springframework.web.server.ServerWebExchange;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Mono;
-import reactor.netty.http.server.HttpServerResponse;
 
 @Slf4j
 @Component
@@ -32,35 +38,31 @@ public class BasicAuthRequestUpgradeStrategy implements RequestUpgradeStrategy {
     // }
 
     @Override
-    public Mono<Void> upgrade(ServerWebExchange exchange, //
-                              WebSocketHandler handler, //
-                              @Nullable String subProtocol, //
-                              Supplier<HandshakeInfo> handshakeInfoFactory) {
-
-        ServerHttpResponse response = exchange.getResponse();
+    public Mono<Void> upgrade(ServerWebExchange exchange, WebSocketHandler webSocketHandler, @Nullable String subProtocol,
+            Supplier<HandshakeInfo> handshakeInfoFactory) {
         
+        ServerHttpResponse response = exchange.getResponse();
         HttpServerResponse reactorResponse = getNativeResponse(response);
         HandshakeInfo handshakeInfo = handshakeInfoFactory.get();
         NettyDataBufferFactory bufferFactory = (NettyDataBufferFactory) response.bufferFactory();
+    
+        // var authResult = validateAuth(handshakeInfo);
+        // if (authResult == unauthorised) return Mono.just(reactorResponse.status(rejectedStatus))
+        //                                            .flatMap(HttpServerResponse::send);
 
-        String originHeader = handshakeInfo.getHeaders()
-                                           .getOrigin();// you will get ws://user:pass@localhost:8080
+        // if(NOT_AUTHENTICATED) return Mono.just(reactorResponse.status(HttpResponseStatus.FORBIDDEN)).flatMap(HttpServerResponse::send);
 
-        return Mono.just(null);
-        // return service.authenticate(originHeader)//returns Mono<Boolean>
-        //               .filter(Boolean::booleanValue)// filter the result
-        //               .doOnNext(a -> log.info("AUTHORIZED"))
-        //               .flatMap(a -> reactorResponse.sendWebsocket(subProtocol, this.maxFramePayloadLength, (in, out) -> {
+        final WebsocketServerSpec websocketServerSpec = WebsocketServerSpec.builder()
+                .maxFramePayloadLength(this.maxFramePayloadLength)    
+                // .protocols(subProtocol)
+                .build();
 
-        //                   ReactorNettyWebSocketSession session = //
-        //                           new ReactorNettyWebSocketSession(in, out, handshakeInfo, bufferFactory, this.maxFramePayloadLength);
+        return reactorResponse.sendWebsocket( (in, out) -> {
 
-        //                   return handler.handle(session);
-        //               }))
-        //               .switchIfEmpty(Mono.just("UNATHORIZED")
-        //                                  .doOnNext(log::info)
-        //                                  .then());
+                ReactorNettyWebSocketSession session = new ReactorNettyWebSocketSession(in, out, handshakeInfo, bufferFactory, this.maxFramePayloadLength);
 
+                return webSocketHandler.handle(session);
+        }, websocketServerSpec);
     }
 
     private static HttpServerResponse getNativeResponse(ServerHttpResponse response) {
