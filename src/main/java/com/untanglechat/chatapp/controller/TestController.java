@@ -1,9 +1,6 @@
 package com.untanglechat.chatapp.controller;
 
-import java.util.UUID;
-
 import com.untanglechat.chatapp.dto.MessageDTO;
-import com.untanglechat.chatapp.models.MessageInfoModel;
 import com.untanglechat.chatapp.repository.MessageRepository;
 import com.untanglechat.chatapp.services.MessagingService;
 

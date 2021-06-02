@@ -1,13 +1,18 @@
 package com.untanglechat.chatapp.services;
 
 import javax.annotation.PostConstruct;
+import javax.security.auth.Subject;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.untanglechat.chatapp.dto.MessageDTO;
+import com.untanglechat.chatapp.security.JwtTokenProvider;
+import com.untanglechat.chatapp.util.UtilityService;
 
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.WebSocketSession;
@@ -23,6 +28,8 @@ public class ChatWebsocketHandler implements WebSocketHandler{
     String exchange;
 
 
+    private final UtilityService utilityService;
+    private final JwtTokenProvider jwtTokenProvider;
     private final MessagingService messagingService;
 
     private ObjectMapper objectMapper;
@@ -33,27 +40,27 @@ public class ChatWebsocketHandler implements WebSocketHandler{
     }
 
 
-
-
-
-
     @Override
     public Mono<Void> handle(WebSocketSession session) {
       
-        System.err.println("session id: ==> "+session.getId());
+        System.err.println("session id: ==> " + session.getId());
         
+        // Get user info from the JWT
+        final String token = utilityService.getTokenFromHandshakeInfo(session.getHandshakeInfo());
+        var claimsFromJWT = jwtTokenProvider.extractAllClaims(token);
+
+        final String meSubject = claimsFromJWT.getSubject();
+
+
         // Create queue
         // final String queueName = "q3";
-        final String queueName = "q3";//+Math.round(Math.random()*20);//session.getId();
+        final String queueName = meSubject;//+Math.round(Math.random()*20);//session.getId();
         final String ROUTING_KEY = queueName;
 
         Queue queue = new Queue(queueName, false);
         messagingService.createQueue(queue);
         messagingService.bindingQueueWithRoutingKey(queue, new TopicExchange(this.exchange), ROUTING_KEY);
-        
 
-        System.out.println(session.isOpen());
-        System.out.println(session.getHandshakeInfo());
 
         return session
             .send(
@@ -65,7 +72,7 @@ public class ChatWebsocketHandler implements WebSocketHandler{
                 // send all the data from the database to the queue 
 
                 // Currently sending to the channel
-                session.send(messagingService.getAllMessageWithRoutingKey("123")
+                session.send(messagingService.getAllMessageWithRoutingKey(ROUTING_KEY)
                     .map(msg -> {
                         try {
                             return session.textMessage(objectMapper.writeValueAsString(msg));

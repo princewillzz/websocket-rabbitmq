@@ -4,6 +4,7 @@ import com.untanglechat.chatapp.dto.MessageDTO;
 import com.untanglechat.chatapp.models.MessageInfoModel;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.socket.HandshakeInfo;
 
 @Service
 public class UtilityService {
@@ -26,6 +27,13 @@ public class UtilityService {
         messageInfoModel.setSentTo(messageDTO.getSentTo());     
 
         return messageInfoModel;
+    }
+
+
+    public String getTokenFromHandshakeInfo(final HandshakeInfo handshakeInfo){
+
+        return (handshakeInfo.getUri().getQuery()).replace("token=", "");
+
     }
     
 }

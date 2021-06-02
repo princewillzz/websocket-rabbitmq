@@ -62,12 +62,18 @@ public class JwtTokenProvider {
                 .compact();
 
     }
+
+
+    public Claims extractAllClaims(String token) {
+        System.out.println("Extracting claims: " + this.secretKey + " " + token);
+        return Jwts.parserBuilder().setSigningKey(this.secretKey)
+            .build().parseClaimsJws(token).getBody();
+    }
     
 
     public Authentication getAuthentication(String token) {
-        Claims claims = Jwts.parserBuilder().setSigningKey(secretKey).build()
-                .parseClaimsJws(token)
-                .getBody();
+        Claims claims = this.extractAllClaims(token);
+        
         Collection<? extends GrantedAuthority> authorities = AuthorityUtils.commaSeparatedStringToAuthorityList(claims.get(AUTHORITIES_KEY).toString());
         User principal = new User(claims.getSubject(), "", authorities);
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);

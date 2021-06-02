@@ -59,7 +59,10 @@
         var ws;
         const handleConnect = () => {
             console.log("Connecting");
-            ws = new WebSocket("ws://localhost:8080/websocket")
+            const jwttoken = `
+            eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoYXJzaCIsInJvbGVzIjoidXNlciIsImlhdCI6MTYyMjY1OTI2NiwiZXhwIjoxNjIyNzQ1NjY2fQ.oj3_pz_7mNtN5vwFcia8Kg10VDA6UxxLFHH5TrBpZdM
+            `
+            ws = new WebSocket(`ws://localhost:8080/websocket?token=${jwttoken}`)
             ws.onopen = function() {
                 console.log("Connected");
             }
@@ -74,11 +77,11 @@
                 const data = JSON.parse(e.data)
                 // console.log(data, typeof(data))
                 
-                // const element = document.createElement('li')
-                // element.className = "list-group-item"
-                // element.innerHTML = `${new Date(data.sentTime).toLocaleTimeString()} => ${data.message}`
+                const element = document.createElement('li')
+                element.className = "list-group-item"
+                element.innerHTML = `${new Date(data.sentTime).toLocaleTimeString()} => ${data.message}`
 
-                // document.querySelector('.list-group').prepend(element)
+                document.querySelector('.list-group').prepend(element)
             }
 
 

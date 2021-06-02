@@ -2,12 +2,10 @@ package com.untanglechat.chatapp.util;
 
  
 
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.netty.http.server.HttpServerResponse;
-import reactor.netty.http.server.WebsocketServerSpec;
-
 import java.util.function.Supplier;
+
+import com.untanglechat.chatapp.models.AuthenticationStatusEnum;
+import com.untanglechat.chatapp.security.JwtTokenProvider;
 
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
 import org.springframework.http.server.reactive.AbstractServerHttpResponse;
@@ -23,19 +21,22 @@ import org.springframework.web.reactive.socket.server.RequestUpgradeStrategy;
 import org.springframework.web.server.ServerWebExchange;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
+import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.http.server.WebsocketServerSpec;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class BasicAuthRequestUpgradeStrategy implements RequestUpgradeStrategy {
 
     private int maxFramePayloadLength = NettyWebSocketSessionSupport.DEFAULT_FRAME_MAX_SIZE;
 
-    // private final AuthenticationService service;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    // public BasicAuthRequestUpgradeStrategy(AuthenticationService service) {
-    //     this.service = service;
-    // }
+    private final UtilityService utilityService;
 
     @Override
     public Mono<Void> upgrade(ServerWebExchange exchange, WebSocketHandler webSocketHandler, @Nullable String subProtocol,
@@ -46,11 +47,15 @@ public class BasicAuthRequestUpgradeStrategy implements RequestUpgradeStrategy {
         HandshakeInfo handshakeInfo = handshakeInfoFactory.get();
         NettyDataBufferFactory bufferFactory = (NettyDataBufferFactory) response.bufferFactory();
     
-        // var authResult = validateAuth(handshakeInfo);
-        // if (authResult == unauthorised) return Mono.just(reactorResponse.status(rejectedStatus))
-        //                                            .flatMap(HttpServerResponse::send);
+        // to be changed later on
+        // System.err.println(handshakeInfo);
+        // System.err.println(handshakeInfo.getAttributes());
+        
+        var authResult = validateAuth(handshakeInfo);
+        if (authResult == AuthenticationStatusEnum.UNAUTHORIZED) return Mono.just(reactorResponse.status(HttpResponseStatus.FORBIDDEN))
+                                                   .flatMap(HttpServerResponse::send);
 
-        // if(NOT_AUTHENTICATED) return Mono.just(reactorResponse.status(HttpResponseStatus.FORBIDDEN)).flatMap(HttpServerResponse::send);
+        if(authResult == AuthenticationStatusEnum.UNAUTHENTICATED) return Mono.just(reactorResponse.status(HttpResponseStatus.UNAUTHORIZED)).flatMap(HttpServerResponse::send);
 
         final WebsocketServerSpec websocketServerSpec = WebsocketServerSpec.builder()
                 .maxFramePayloadLength(this.maxFramePayloadLength)    
@@ -74,5 +79,19 @@ public class BasicAuthRequestUpgradeStrategy implements RequestUpgradeStrategy {
             throw new IllegalArgumentException("Couldn't find native response in " + response.getClass()
                                                                                              .getName());
         }
+    }
+
+    private AuthenticationStatusEnum validateAuth(final HandshakeInfo handshakeInfo) {
+
+        String token = utilityService.getTokenFromHandshakeInfo(handshakeInfo);
+
+        boolean isAuthenticated = false;
+        try {
+            isAuthenticated = jwtTokenProvider.validateToken(token);
+        } catch (Exception e) {
+           log.error(e.getMessage());
+        }
+
+        return isAuthenticated? AuthenticationStatusEnum.AUTHENTICATED: AuthenticationStatusEnum.UNAUTHENTICATED;
     }
 }

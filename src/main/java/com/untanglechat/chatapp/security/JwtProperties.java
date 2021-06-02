@@ -9,5 +9,5 @@ import lombok.Data;
 public class JwtProperties {
     private String secretKey = "flzxsqcysyadadadhljtasdadjsadjsadjsakdjkdjsakldjsaljdsadjsajdadjaldja";
     //validity in milliseconds
-    private long validityInMs = 3600000; // 1h
+    private long validityInMs = 1000 * 60 * 60 * 24; // 24h
 }

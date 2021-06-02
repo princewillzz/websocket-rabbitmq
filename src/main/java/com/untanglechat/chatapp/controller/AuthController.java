@@ -22,8 +22,10 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
+    
     private final JwtTokenProvider tokenProvider;
     private final ReactiveAuthenticationManager authenticationManager;
+
     @PostMapping("/authenticate")
     public Mono<ResponseEntity<?>> login( @RequestBody Mono<AuthenticationRequest> authRequest) {
         return authRequest
@@ -39,4 +41,5 @@ public class AuthController {
                         }
                 );
     }
+
 }
