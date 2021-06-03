@@ -53,13 +53,11 @@ public class ChatWebsocketHandler implements WebSocketHandler{
 
 
         // Create queue
-        // final String queueName = "q3";
-        final String queueName = meSubject;//+Math.round(Math.random()*20);//session.getId();
+        final String queueName = meSubject;
         final String ROUTING_KEY = queueName;
+        final TopicExchange exchange = new TopicExchange(this.exchange);
 
-        Queue queue = new Queue(queueName, false);
-        messagingService.createQueue(queue);
-        messagingService.bindingQueueWithRoutingKey(queue, new TopicExchange(this.exchange), ROUTING_KEY);
+        final Queue queue = messagingService.createBindAndInitializeQueue(queueName, exchange, ROUTING_KEY);
 
 
         return session

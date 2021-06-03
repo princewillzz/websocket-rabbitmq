@@ -48,6 +48,7 @@ public class TestController {
         var queueInfo = rabbitAdmin.getQueueInfo(queueName);
         String ROUTING_KEY = queueName;
 
+
         if(queueInfo != null) {
             
             System.err.println("Queue present");
@@ -55,10 +56,7 @@ public class TestController {
 
         } else {
             System.err.println("No queue");
-
-            Queue queue = new Queue(queueName, false);
-            messagingService.createQueue(queue);
-            messagingService.bindingQueueWithRoutingKey(queue, new TopicExchange(this.exchange), ROUTING_KEY);
+            messagingService.createBindAndInitializeQueue(queueName, new TopicExchange(this.exchange), ROUTING_KEY);
             // rabbitAdmin.declareQueue(queue);
 
             // rabbitAdmin.declareBinding(messagingService.binding(queue, new TopicExchange("exchange_secret"), ROUTING_KEY));

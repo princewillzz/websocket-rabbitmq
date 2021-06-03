@@ -52,11 +52,24 @@ public class MessagingService {
         this.messageListenerContainerFactory = messageListenerContainerFactory;
     }
 
+    public Queue createBindAndInitializeQueue(final String queueName, final TopicExchange exchange, final String ROUTING_KEY) {
+        final Queue queue = new Queue(queueName, false);
+        this.createQueue(queue);
+        this.bindingQueueWithRoutingKey(queue, exchange, ROUTING_KEY);
+
+        // TODO 
+        /**
+         * Create a trace of all the queues that are currently active with a routing key and a user public key
+         */
+
+        return queue;
+    }
+
     /**
      * Create a new messaging queue
      * @param queue
      */
-    public void createQueue(final Queue queue) {
+    private void createQueue(final Queue queue) {
         System.out.println("Created queue: => " + queue);
         rabbitAdmin.declareQueue(queue);
     }
@@ -69,7 +82,7 @@ public class MessagingService {
      * @param ROUTING_KEY
      * @return
      */
-    public Binding bindingQueueWithRoutingKey(Queue queue, TopicExchange exchange, String ROUTING_KEY) {
+    private Binding bindingQueueWithRoutingKey(Queue queue, TopicExchange exchange, String ROUTING_KEY) {
         System.out.println("Binding queue with key: => " + ROUTING_KEY);
         return BindingBuilder
                 .bind(queue)
