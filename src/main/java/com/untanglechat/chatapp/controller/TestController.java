@@ -1,6 +1,7 @@
 package com.untanglechat.chatapp.controller;
 
 import com.untanglechat.chatapp.dto.MessageDTO;
+import com.untanglechat.chatapp.models.MessageInfoModel;
 import com.untanglechat.chatapp.repository.MessageRepository;
 import com.untanglechat.chatapp.services.MessagingService;
 
@@ -15,6 +16,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import reactor.core.publisher.Mono;
+
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 
 
@@ -98,5 +104,12 @@ public class TestController {
 
     @GetMapping("/secured/auth/authenticate")
     public String securedHello() {return "hello";}
+
+    @GetMapping(value="/test/{id}")
+    public Object sdatst(@PathVariable String id) {
+       
+        return messageRepository.existsByRoutingKey(id);
+    }
+    
 
 }

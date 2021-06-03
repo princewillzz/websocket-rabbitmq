@@ -23,7 +23,7 @@ public class SecurityConfig {
                                                 ReactiveAuthenticationManager reactiveAuthenticationManager) {
         
 
-        return http.csrf(ServerHttpSecurity.CsrfSpec::disable)
+        return http.csrf(ServerHttpSecurity.CsrfSpec::disable).cors().disable()
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .authenticationManager(reactiveAuthenticationManager)
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())

@@ -2,7 +2,9 @@ package com.untanglechat.chatapp.services;
 
 import com.untanglechat.chatapp.configuration.MessageListenerContainerFactory;
 import com.untanglechat.chatapp.dto.MessageDTO;
+import com.untanglechat.chatapp.models.ActiveQueueModel;
 import com.untanglechat.chatapp.models.MessageInfoModel;
+import com.untanglechat.chatapp.repository.ActiveQueueRepository;
 import com.untanglechat.chatapp.repository.MessageRepository;
 import com.untanglechat.chatapp.util.UtilityService;
 
@@ -18,10 +20,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
+@RequiredArgsConstructor
 public class MessagingService {
 
     @Value("${spring.rabbitmq.template.exchange}")
@@ -34,35 +38,43 @@ public class MessagingService {
     private final MessageListenerContainerFactory messageListenerContainerFactory;
 
     private final MessageRepository messageRepository;
+    private final ActiveQueueRepository activeQueueRepository;
 
     private final UtilityService utilityService;
 
-    @Autowired
-    protected MessagingService(
-        final RabbitAdmin rabbitAdmin,
-        final RabbitTemplate rabbitTemplate,
-        final MessageRepository messageRepository,
-        final UtilityService utilityService,
-        final MessageListenerContainerFactory messageListenerContainerFactory
-    ) {
-        this.rabbitAdmin = rabbitAdmin;
-        this.rabbitTemplate = rabbitTemplate;
-        this.messageRepository = messageRepository;
-        this.utilityService = utilityService;
-        this.messageListenerContainerFactory = messageListenerContainerFactory;
-    }
 
     public Queue createBindAndInitializeQueue(final String queueName, final TopicExchange exchange, final String ROUTING_KEY) {
         final Queue queue = new Queue(queueName, false);
         this.createQueue(queue);
         this.bindingQueueWithRoutingKey(queue, exchange, ROUTING_KEY);
 
-        // TODO 
-        /**
-         * Create a trace of all the queues that are currently active with a routing key and a user public key
-         */
+        activeQueueRepository.findByRoutingKey(ROUTING_KEY)
+            .switchIfEmpty(Mono.defer(() -> {
+
+                 final ActiveQueueModel activeQueueModel = ActiveQueueModel.builder()
+                    .routingKey(ROUTING_KEY)
+                    .build();
+
+                this.saveActiveQueueStatusToTheDB(activeQueueModel)
+                    .retry(3l)
+                    .subscribe();
+
+                return Mono.empty();
+            })).subscribe();
+       
 
         return queue;
+       
+    }
+
+    private Mono<ActiveQueueModel> saveActiveQueueStatusToTheDB(final ActiveQueueModel activeQueueModel) {
+        return activeQueueRepository.save(activeQueueModel);
+    }
+
+    private Mono<Boolean> isQueueWithRoutingKeyActive(final String routingKey) {
+
+        return activeQueueRepository.existsByRoutingKey(routingKey);
+            
     }
 
     /**
@@ -96,9 +108,14 @@ public class MessagingService {
      * delete the queue from the message broker
      * @param queue
      */
-    public void deleteQueue(final Queue queue) {
+    public void deleteQueue(final Queue queue, final String routingKey) {
+        
+        activeQueueRepository.deleteByRoutingKey(routingKey)
+            .doOnSuccess((it) -> {
+                rabbitAdmin.deleteQueue(queue.getName());
+            })
+            .subscribe();
         System.out.println("Deleted queue: => " + queue);
-        rabbitAdmin.deleteQueue(queue.getName());
     }
 
     /**
@@ -115,12 +132,18 @@ public class MessagingService {
         final String ROUTING_KEY,
         final String queueName
     ) {
-        var queueInfo = rabbitAdmin.getQueueInfo(queueName);
-        if(queueInfo != null) {
-            rabbitTemplate.convertAndSend(exchange, ROUTING_KEY, message);
-        } else {
-            this.persistDataToDB(message, ROUTING_KEY);
-        }        
+        // var queueInfo = rabbitAdmin.getQueueInfo(queueName);
+        
+        this.isQueueWithRoutingKeyActive(message.getSentTo())
+            .subscribe(isUserOnline -> {
+                if(isUserOnline) {
+                    rabbitTemplate.convertAndSend(exchange, message.getSentTo(), message);
+                    // rabbitTemplate.convertAndSend(exchange, ROUTING_KEY, message);
+                } else {
+                    this.persistDataToDB(message, message.getSentTo());
+                    // this.persistDataToDB(message, ROUTING_KEY);
+                }  
+            });              
 
         System.out.println("sending message: => " + message + " with key: " + ROUTING_KEY +" with exchange : " + exchange);
         

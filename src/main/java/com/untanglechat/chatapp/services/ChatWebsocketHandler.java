@@ -15,6 +15,7 @@ import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.WebSocketHandler;
+import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
 
 import lombok.RequiredArgsConstructor;
@@ -84,31 +85,33 @@ public class ChatWebsocketHandler implements WebSocketHandler{
             )
             .and(
                 session.receive()
-                .map(msg -> {
-
-                    // After the frontend sends the whole object
-                    // System.out.println("Payload received: " + msg.getPayloadAsText());
-                    // try {
-                    //     var o =  objectMapper.readValue(msg.getPayloadAsText(), MessageDTO.class);
-                    //     System.err.println("payload to obj: ===> " + o);
-                    // } catch (Exception e) {
-                    //     //TODO: handle exception
-                    //     System.out.println(e.getMessage());
-                    // }
-
-                    MessageDTO m = new MessageDTO();
-                    m.setMessage(msg.getPayloadAsText());
-                    return m;
-                }).flatMap(message -> {
-                    return messagingService.sendMessage(message, this.exchange, ROUTING_KEY, queueName);
-                })
+                    .map(this::parsePayloadToMessageEntity)
+                    .filter(msg -> msg != null)
+                    .flatMap(message -> {
+                        return messagingService.sendMessage(message, this.exchange, ROUTING_KEY, queueName);
+                    })
             ).doFinally(signalType -> {
                 
                 // Delete my queue
-                messagingService.deleteQueue(queue);
+                messagingService.deleteQueue(queue, ROUTING_KEY);
 
             }).log();
 
     }
 
+
+    MessageDTO parsePayloadToMessageEntity(final WebSocketMessage webSocketMessage) {
+        // MessageDTO messageDTO = new MessageDTO();
+        // messageDTO.setMessage(webSocketMessage.getPayloadAsText());
+        // return messageDTO;
+
+        try {
+            System.err.println(webSocketMessage.getPayloadAsText());
+            System.err.println(objectMapper.readValue(webSocketMessage.getPayloadAsText(), MessageDTO.class));
+            return objectMapper.readValue(webSocketMessage.getPayloadAsText(), MessageDTO.class);
+        } catch (Exception e) {
+            return null;
+        }
+
+    }
 }
