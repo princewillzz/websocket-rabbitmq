@@ -14,5 +14,7 @@ Now visit http://localhost:8080 to use websockets
 ~ send message directly to a queue by sending a post request to url http://localhost:8080/publish/{queueName} with message in the body of the request
 where queuename is the name of queue, It will be created if it does not exist 
 
+![Screenshot from 2021-06-03 17-35-58](https://user-images.githubusercontent.com/43216487/120642198-3649af00-c492-11eb-857f-82e60d0d835e.png)
+
 
 
