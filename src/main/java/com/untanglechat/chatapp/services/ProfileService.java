@@ -1,11 +1,16 @@
 package com.untanglechat.chatapp.services;
 
 import java.util.Arrays;
+import java.util.Collection;
 
+import com.untanglechat.chatapp.exceptions.UsernameAlreadyExists;
 import com.untanglechat.chatapp.models.Profile;
 import com.untanglechat.chatapp.repository.ProfileRepository;
+import com.untanglechat.chatapp.security.JwtTokenProvider;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,6 +28,8 @@ public class ProfileService implements ReactiveUserDetailsService{
     private final ProfileRepository profileRepository;
     
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
+
 
     @Override
     public Mono<UserDetails> findByUsername(String username) {
@@ -44,12 +51,34 @@ public class ProfileService implements ReactiveUserDetailsService{
         return profileRepository.findAll();
     }
 
-    public void registerProfile(final Profile profile) {
+    public Mono<String> registerProfile(final Profile profile) {
         if(profile.getId() != null) throw new IllegalStateException("Invalid Argument");
         profile.setRoles(Arrays.asList("ROLE_USER"));
+
         profile.setPassword(passwordEncoder.encode(profile.getPassword()));
 
-        profileRepository.save(profile).subscribe();
+        return this.profileRepository.existsByUsername(profile.getUsername())
+            .onErrorMap(e -> e)
+            .flatMap(usernameExists -> {
+                if(usernameExists) throw new UsernameAlreadyExists("Duplicate Username");
+                return profileRepository.save(profile)
+                    .map(it -> {
+                        Collection<? extends GrantedAuthority> authorities = AuthorityUtils.commaSeparatedStringToAuthorityList(it.getRoles().toString());
+                        User principal = new User(it.getUsername(), "", authorities);
+                        var authentication = new UsernamePasswordAuthenticationToken(principal, authorities);
+                        return jwtTokenProvider.createToken(authentication);
+                    });
+            });
+        
+       
+
+        // return profileRepository.save(profile)
+        //     .map(it -> {
+        //         Collection<? extends GrantedAuthority> authorities = AuthorityUtils.commaSeparatedStringToAuthorityList(it.getRoles().toString());
+        //         User principal = new User(it.getUsername(), "", authorities);
+        //         var authentication = new UsernamePasswordAuthenticationToken(principal, authorities);
+        //         return jwtTokenProvider.createToken(authentication);
+        //     });
     }
     
 }

@@ -1,9 +1,13 @@
 package com.untanglechat.chatapp.controller;
 
+import java.rmi.AlreadyBoundException;
 import java.util.Map;
 
 import com.untanglechat.chatapp.dto.AuthenticationRequest;
+import com.untanglechat.chatapp.dto.response.TokenResponse;
+import com.untanglechat.chatapp.models.Profile;
 import com.untanglechat.chatapp.security.JwtTokenProvider;
+import com.untanglechat.chatapp.services.ProfileService;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -25,6 +29,7 @@ public class AuthController {
     
     private final JwtTokenProvider tokenProvider;
     private final ReactiveAuthenticationManager authenticationManager;
+    private final ProfileService profileService;
 
     @PostMapping("/authenticate")
     public Mono<ResponseEntity<?>> login( @RequestBody Mono<AuthenticationRequest> authRequest) {
@@ -36,10 +41,32 @@ public class AuthController {
                 .map(jwt -> {
                             HttpHeaders httpHeaders = new HttpHeaders();
                             httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + jwt);
-                            var tokenBody = Map.of("id_token", jwt);
-                            return new ResponseEntity<>(tokenBody, httpHeaders, HttpStatus.OK);
+                            var tokenRequest = TokenResponse.builder()
+                                .token(jwt)
+                                .build();
+                            return new ResponseEntity<>(tokenRequest, httpHeaders, HttpStatus.OK);
                         }
                 );
+    }
+
+
+    @PostMapping("/users/register")
+    public Mono<ResponseEntity<?>> registerUser(@RequestBody final Mono<Profile> profileRequest) {
+
+        return profileRequest
+            .flatMap(profile -> profileService
+                .registerProfile(profile)
+            )
+            .map(jwt -> {
+                        HttpHeaders httpHeaders = new HttpHeaders();
+                        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + jwt);
+                        var tokenRequest = TokenResponse.builder()
+                            .token(jwt)
+                            .build();
+                        return new ResponseEntity<>(tokenRequest, httpHeaders, HttpStatus.OK);
+                    }
+            );
+        
     }
 
 }

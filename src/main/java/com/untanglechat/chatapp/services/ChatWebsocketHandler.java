@@ -1,7 +1,6 @@
 package com.untanglechat.chatapp.services;
 
 import javax.annotation.PostConstruct;
-import javax.security.auth.Subject;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.untanglechat.chatapp.dto.MessageDTO;
@@ -11,8 +10,6 @@ import com.untanglechat.chatapp.util.UtilityService;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.WebSocketMessage;

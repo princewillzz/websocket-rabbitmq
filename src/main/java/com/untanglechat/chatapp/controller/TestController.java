@@ -1,11 +1,9 @@
 package com.untanglechat.chatapp.controller;
 
 import com.untanglechat.chatapp.dto.MessageDTO;
-import com.untanglechat.chatapp.models.MessageInfoModel;
 import com.untanglechat.chatapp.repository.MessageRepository;
 import com.untanglechat.chatapp.services.MessagingService;
 
-import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -16,10 +14,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
-import reactor.core.publisher.Mono;
-
-import org.springframework.web.bind.annotation.RequestParam;
 
 
 
