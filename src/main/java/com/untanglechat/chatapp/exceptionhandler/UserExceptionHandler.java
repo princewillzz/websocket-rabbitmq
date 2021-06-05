@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UserExceptionHandler {
 
     @ExceptionHandler(UsernameAlreadyExists.class)
-    // @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse serverExceptionHandler(Exception ex) {
         log.error(ex.getMessage(),ex);
         return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage());
