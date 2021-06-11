@@ -5,9 +5,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@AllArgsConstructor
 @NoArgsConstructor
-public class UsernameAlreadyExists extends RuntimeException {
+@AllArgsConstructor
+public class NoUserFoundException extends RuntimeException {
     
     @Getter @Setter private String message;
 

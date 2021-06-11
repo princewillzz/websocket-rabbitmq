@@ -3,6 +3,7 @@ package com.untanglechat.chatapp.services;
 import java.util.Arrays;
 import java.util.Collection;
 
+import com.untanglechat.chatapp.exceptions.NoUserFoundException;
 import com.untanglechat.chatapp.exceptions.UsernameAlreadyExists;
 import com.untanglechat.chatapp.models.Profile;
 import com.untanglechat.chatapp.repository.ProfileRepository;
@@ -18,11 +19,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProfileService implements ReactiveUserDetailsService{
 
     private final ProfileRepository profileRepository;
@@ -32,8 +35,8 @@ public class ProfileService implements ReactiveUserDetailsService{
 
 
     @Override
-    public Mono<UserDetails> findByUsername(String username) {
-        System.err.println("Fetching DB: "+ username);
+    public Mono<UserDetails> findByUsername(final String username) {
+        log.info("Fetching DB: "+ username);
         return profileRepository.findByUsername(username)
                 .map(u -> User
                     .withUsername(u.getUsername()).password(u.getPassword())
@@ -44,6 +47,10 @@ public class ProfileService implements ReactiveUserDetailsService{
                     .accountLocked(!u.isActive())
                     .build()
                 );
+    }
+
+    public Mono<Profile> getProfileByUsername(final String username) {
+        return profileRepository.findByUsername(username).switchIfEmpty(Mono.error(() ->  new NoUserFoundException("User Does not exists")));
     }
 
     public Flux<Profile> getAllProfiles(){
