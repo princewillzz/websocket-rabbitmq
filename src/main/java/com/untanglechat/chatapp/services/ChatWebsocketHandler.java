@@ -85,6 +85,7 @@ public class ChatWebsocketHandler implements WebSocketHandler{
                     .map(this::parsePayloadToMessageEntity)
                     .filter(msg -> msg != null)
                     .flatMap(message -> {
+                        message.setSentBy(meSubject);
                         return messagingService.sendMessage(message, this.exchange, ROUTING_KEY, queueName);
                     })
             ).doFinally(signalType -> {

@@ -44,24 +44,26 @@ public class TestController {
         
         MessageDTO message = new MessageDTO();
         message.setMessage(entity);
+        message.setSentTo(queueName);
+
 
         var queueInfo = rabbitAdmin.getQueueInfo(queueName);
         String ROUTING_KEY = queueName;
 
 
-        if(queueInfo != null) {
+        // if(queueInfo != null) {
             
-            System.err.println("Queue present");
-            System.out.println(queueInfo);
+        //     System.err.println("Queue present");
+        //     System.out.println(queueInfo);
 
-        } else {
-            System.err.println("No queue");
-            messagingService.createBindAndInitializeQueue(queueName, new TopicExchange(this.exchange), ROUTING_KEY);
-            // rabbitAdmin.declareQueue(queue);
+        // } else {
+        //     System.err.println("No queue");
+        //     messagingService.createBindAndInitializeQueue(queueName, new TopicExchange(this.exchange), ROUTING_KEY);
+        //     // rabbitAdmin.declareQueue(queue);
 
-            // rabbitAdmin.declareBinding(messagingService.binding(queue, new TopicExchange("exchange_secret"), ROUTING_KEY));
+        //     // rabbitAdmin.declareBinding(messagingService.binding(queue, new TopicExchange("exchange_secret"), ROUTING_KEY));
             
-        }
+        // }
         
 
         System.out.println("OUR exhange: "+ this.exchange);
