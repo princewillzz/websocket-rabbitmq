@@ -36,5 +36,7 @@ public class Profile {
 
     @Builder.Default()
     private List<String> roles = new ArrayList<>();
+
+    private String publicRSAKey;
     
 }

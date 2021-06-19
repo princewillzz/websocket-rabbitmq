@@ -28,9 +28,8 @@ public class UserController {
 
     @GetMapping("/secured/users/exists/{username}")
     public Mono<Profile> checkUserExistsAndSendInfo(@PathVariable("username") final String username) {
+        System.err.println(username);
         return profileService.getProfileByUsername(username);
     }
-    
-
 
 }

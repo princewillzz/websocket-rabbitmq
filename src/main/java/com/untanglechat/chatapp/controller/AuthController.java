@@ -1,8 +1,5 @@
 package com.untanglechat.chatapp.controller;
 
-import java.rmi.AlreadyBoundException;
-import java.util.Map;
-
 import com.untanglechat.chatapp.dto.AuthenticationRequest;
 import com.untanglechat.chatapp.dto.response.TokenResponse;
 import com.untanglechat.chatapp.models.Profile;
@@ -54,19 +51,15 @@ public class AuthController {
     public Mono<ResponseEntity<?>> registerUser(@RequestBody final Mono<Profile> profileRequest) {
 
         return profileRequest
-            .flatMap(profile -> profileService
-                .registerProfile(profile)
-            )
-            .map(jwt -> {
-                        HttpHeaders httpHeaders = new HttpHeaders();
-                        httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + jwt);
-                        var tokenRequest = TokenResponse.builder()
-                            .token(jwt)
-                            .build();
-                        return new ResponseEntity<>(tokenRequest, httpHeaders, HttpStatus.OK);
-                    }
-            );
-        
+            .flatMap(profile -> {
+                final String password = profile.getPassword();
+                return profileService
+                    .registerProfile(profile)
+                    .flatMap(savedProfile -> {
+                        return this.login(Mono.just(new AuthenticationRequest(savedProfile.getUsername(), password)));
+                    });
+                
+            });
     }
 
 }

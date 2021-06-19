@@ -1,5 +1,8 @@
 package com.untanglechat.chatapp.security;
+import static java.util.stream.Collectors.joining;
+
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Date;
@@ -7,12 +10,12 @@ import java.util.Date;
 import javax.annotation.PostConstruct;
 import javax.crypto.SecretKey;
 
+import com.untanglechat.chatapp.models.Profile;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
@@ -23,13 +26,12 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 
-import static java.util.stream.Collectors.joining;
-
 
 @Component
 @Slf4j
 public class JwtTokenProvider {
     private static final String AUTHORITIES_KEY = "roles";
+    // private static final String PUBLIC_RSA_KEY = "public_rsa_key";
 
     @Autowired
     JwtProperties jwtProperties;
@@ -50,6 +52,10 @@ public class JwtTokenProvider {
         if (!authorities.isEmpty()) {
             claims.put(AUTHORITIES_KEY, authorities.stream().map(GrantedAuthority::getAuthority).collect(joining(",")));
         }
+        
+        // final UserPrincipal userPrincipal = (UserPrincipal)authentication.getPrincipal();
+        // claims.put(PUBLIC_RSA_KEY, userPrincipal.getPublicRSAKey());
+        
 
         Date now = new Date();
         Date validity = new Date(now.getTime() + this.jwtProperties.getValidityInMs());
@@ -65,7 +71,7 @@ public class JwtTokenProvider {
 
 
     public Claims extractAllClaims(String token) {
-        System.out.println("Extracting claims: " + this.secretKey + " " + token);
+        // System.out.println("Extracting claims: " + this.secretKey + " " + token);
         return Jwts.parserBuilder().setSigningKey(this.secretKey)
             .build().parseClaimsJws(token).getBody();
     }
@@ -73,10 +79,23 @@ public class JwtTokenProvider {
 
     public Authentication getAuthentication(String token) {
         Claims claims = this.extractAllClaims(token);
+        // Collection<? extends GrantedAuthority> authorities = AuthorityUtils.commaSeparatedStringToAuthorityList(claims.get(AUTHORITIES_KEY).toString());
+        // User principal = new User(claims.getSubject(), "", authorities);
+
         
-        Collection<? extends GrantedAuthority> authorities = AuthorityUtils.commaSeparatedStringToAuthorityList(claims.get(AUTHORITIES_KEY).toString());
-        User principal = new User(claims.getSubject(), "", authorities);
-        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
+        // System.err.println(Arrays(claims.get(AUTHORITIES_KEY).toString().split(",")));
+        // System.out.println("Sub: "+claims.getSubject());
+        // System.out.println("Auth"+claims.get(AUTHORITIES_KEY));
+        // System.out.println("Auth list"+claims.get(AUTHORITIES_KEY).toString().split(","));
+        final UserPrincipal userPrincipal = new UserPrincipal(
+            Profile.builder()
+            .username(claims.getSubject())
+            .roles(Arrays.asList(claims.get(AUTHORITIES_KEY).toString().split(",")))
+            .build());
+
+            
+       
+        return new UsernamePasswordAuthenticationToken(userPrincipal, token, userPrincipal.getAuthorities());
     }
     
     public boolean validateToken(String token) {
