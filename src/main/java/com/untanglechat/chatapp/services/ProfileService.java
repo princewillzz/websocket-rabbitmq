@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import com.untanglechat.chatapp.dto.request.RsaTokenUpdateRequest;
 import com.untanglechat.chatapp.exceptions.NoUserFoundException;
+import com.untanglechat.chatapp.exceptions.UnAcceptableFormDataException;
 import com.untanglechat.chatapp.exceptions.UsernameAlreadyExists;
 import com.untanglechat.chatapp.models.Profile;
 import com.untanglechat.chatapp.repository.ProfileRepository;
@@ -47,7 +48,13 @@ public class ProfileService implements ReactiveUserDetailsService{
     }
 
     public Mono<Profile> registerProfile(final Profile profile) throws UsernameAlreadyExists {
-        if(profile.getId() != null) throw new IllegalStateException("Invalid Argument");
+        if(profile.getId() != null) throw new UnAcceptableFormDataException("Illegal Data");
+        if(profile.getPublicRSAKey() == null || 
+        profile.getUsername() == null || 
+        profile.getPassword() == null) {
+            throw new UnAcceptableFormDataException("Incomplete data");
+        } 
+
         profile.setRoles(Arrays.asList("ROLE_USER"));
 
         profile.setPassword(passwordEncoder.encode(profile.getPassword()));
