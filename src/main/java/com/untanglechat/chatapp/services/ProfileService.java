@@ -2,6 +2,7 @@ package com.untanglechat.chatapp.services;
 
 import java.util.Arrays;
 
+import com.untanglechat.chatapp.dto.request.RsaTokenUpdateRequest;
 import com.untanglechat.chatapp.exceptions.NoUserFoundException;
 import com.untanglechat.chatapp.exceptions.UsernameAlreadyExists;
 import com.untanglechat.chatapp.models.Profile;
@@ -27,6 +28,7 @@ public class ProfileService implements ReactiveUserDetailsService{
     
     private final PasswordEncoder passwordEncoder;
 
+  
 
     @Override
     public Mono<UserDetails> findByUsername(final String username) {
@@ -59,4 +61,13 @@ public class ProfileService implements ReactiveUserDetailsService{
         
     }
     
+
+    public Mono<Profile> updatePublicRSATokenForSubject(final String subject, final RsaTokenUpdateRequest tokenUpdateRequest) {
+        return this.getProfileByUsername(subject)
+            .flatMap(profile -> {
+                profile.setPublicRSAKey(tokenUpdateRequest.getRsaPublicKey());
+                return this.profileRepository.save(profile);                
+            });
+    }
+
 }
