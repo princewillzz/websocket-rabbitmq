@@ -12,4 +12,6 @@ public interface MessageRepository extends ReactiveMongoRepository<MessageInfoMo
     Flux<MessageInfoModel> findAllByRoutingKey(String routingKey);
  
     Mono<Boolean> existsByRoutingKey(String routingKey);
+
+    Mono<Void> deleteAllByRoutingKey(String routingKey);
 }

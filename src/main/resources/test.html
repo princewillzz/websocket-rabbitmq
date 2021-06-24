@@ -82,9 +82,7 @@
 			<ul class="list-group"></ul>
 		</div>
 
-		<script src="./test.js"></script>
 		<script>
-
 			let meuser = null;
 			let youuser = null;
 			let jwttoken = `
@@ -134,21 +132,16 @@
 
 				ws.close();
 			};
-			const handleSend = async () => {
+			const handleSend = () => {
 				const data = document.getElementById("text").value;
 				console.log("data: ", data);
-				keypair.then(async kys => {
-					const cipher = await encryptMessage(kys.publicKey, data)
-					console.log(ab2str(cipher));
 
-					const toSendData = {
-						message: ab2str(cipher),
-						sentTo: youuser.username,
-					};
+				const toSendData = {
+					message: data,
+					sentTo: youuser.username,
+				};
 
-					ws.send(JSON.stringify(toSendData));
-				})
-				
+				ws.send(JSON.stringify(toSendData));
 			};
 
 			window.onload = () => {
@@ -199,11 +192,6 @@
 					console.log(youuser);
 				});
 			};
-
-
-
-
-		
 		</script>
 	</body>
 </html>

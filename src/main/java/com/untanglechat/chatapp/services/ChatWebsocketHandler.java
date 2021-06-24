@@ -16,8 +16,10 @@ import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.reactive.socket.WebSocketSession;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ChatWebsocketHandler implements WebSocketHandler{
@@ -78,6 +80,13 @@ public class ChatWebsocketHandler implements WebSocketHandler{
                         }
                         
                     }).filter(msg -> msg != null)
+                    .doOnNext((m) -> {
+                        messagingService.deleteAllMessagesWithRoutingKey(ROUTING_KEY)
+                        .doOnError(e -> {
+                            log.error(e.getMessage());
+                        })
+                        .subscribe();
+                    })
                 )
             )
             .and(

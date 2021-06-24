@@ -174,6 +174,11 @@ public class MessagingService {
         return messageRepository.findAllByRoutingKey(routingKey);
     }
 
+    public Mono<Void> deleteAllMessagesWithRoutingKey(final String routingKey) {
+
+        return messageRepository.deleteAllByRoutingKey(routingKey);
+    }
+
 
     // Listen for all the messages in the queue
     public Flux<String> incomingMessageFlow(final String queueName) {
