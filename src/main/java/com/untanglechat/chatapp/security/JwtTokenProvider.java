@@ -31,7 +31,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JwtTokenProvider {
     private static final String AUTHORITIES_KEY = "roles";
+    private static final String PROFILE_PICTURE_IMAGE = "profile_image";
     // private static final String PUBLIC_RSA_KEY = "public_rsa_key";
+
 
     @Autowired
     JwtProperties jwtProperties;
@@ -53,9 +55,14 @@ public class JwtTokenProvider {
             claims.put(AUTHORITIES_KEY, authorities.stream().map(GrantedAuthority::getAuthority).collect(joining(",")));
         }
         
-        // final UserPrincipal userPrincipal = (UserPrincipal)authentication.getPrincipal();
-        // claims.put(PUBLIC_RSA_KEY, userPrincipal.getPublicRSAKey());
+        try {
+            final UserPrincipal userPrincipal = (UserPrincipal)authentication.getPrincipal();
+            // claims.put(PUBLIC_RSA_KEY, userPrincipal.getPublicRSAKey());
+            claims.put(PROFILE_PICTURE_IMAGE, userPrincipal.getProfileImageS3ObjectId());
         
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
 
         Date now = new Date();
         Date validity = new Date(now.getTime() + this.jwtProperties.getValidityInMs());

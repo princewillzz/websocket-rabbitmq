@@ -54,8 +54,6 @@ public class UserController {
     @PutMapping("/secured/users/rsa-public-key")
     public Mono<Profile> updateRSAToken(@RequestBody final RsaTokenUpdateRequest request, @RequestHeader final HttpHeaders headers) {
 
-        
-
         final Claims claims = utilityService.extractAllClaimsFromRequest(headers);
         final String subject = claims.getSubject();
         

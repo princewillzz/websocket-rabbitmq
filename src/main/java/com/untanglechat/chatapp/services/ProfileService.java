@@ -102,9 +102,8 @@ public class ProfileService implements ReactiveUserDetailsService{
             .flatMap(profile -> amazonAWSS3Service
                     .saveFile(headers, s3config.getBucket(), part)
                     .doOnNext((fileKey) -> {
-                        // TODO store in DB
-                        System.err.println(fileKey);
-
+                        profile.setProfilePictureS3ObjectId(fileKey);
+                        this.profileRepository.save(profile).subscribe();
                     })
             );
 
