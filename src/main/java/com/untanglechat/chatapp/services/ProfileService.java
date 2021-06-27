@@ -3,18 +3,25 @@ package com.untanglechat.chatapp.services;
 import java.util.Arrays;
 
 import com.untanglechat.chatapp.dto.request.RsaTokenUpdateRequest;
+import com.untanglechat.chatapp.dto.response.FluxResponse;
 import com.untanglechat.chatapp.exceptions.NoUserFoundException;
 import com.untanglechat.chatapp.exceptions.UnAcceptableFormDataException;
 import com.untanglechat.chatapp.exceptions.UsernameAlreadyExists;
 import com.untanglechat.chatapp.models.Profile;
+import com.untanglechat.chatapp.properties.S3ClientConfigurarionProperties;
 import com.untanglechat.chatapp.repository.ProfileRepository;
 import com.untanglechat.chatapp.security.UserPrincipal;
+import com.untanglechat.chatapp.services.aws.AmazonAWSS3Service;
+import com.untanglechat.chatapp.util.UtilityService;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
@@ -28,6 +35,14 @@ public class ProfileService implements ReactiveUserDetailsService{
     private final ProfileRepository profileRepository;
     
     private final PasswordEncoder passwordEncoder;
+
+    /**
+     * Dependent services
+     */
+    private final S3ClientConfigurarionProperties s3config;
+    private final AmazonAWSS3Service amazonAWSS3Service;
+
+    private final UtilityService utilityService;
 
   
 
@@ -76,5 +91,27 @@ public class ProfileService implements ReactiveUserDetailsService{
                 return this.profileRepository.save(profile);                
             });
     }
+
+
+    public Mono<String> changeProfilePicture(HttpHeaders headers, FilePart part) {
+
+        final Claims claims = utilityService.extractAllClaimsFromRequest(headers);
+        final String subject = claims.getSubject();
+
+        return this.getProfileByUsername(subject)
+            .flatMap(profile -> amazonAWSS3Service
+                    .saveFile(headers, s3config.getBucket(), part)
+                    .doOnNext((fileKey) -> {
+                        // TODO store in DB
+                        System.err.println(fileKey);
+
+                    })
+            );
+
+    }
+
+    public Mono<FluxResponse> downloadProfilePicture(final String filekey) {
+        return amazonAWSS3Service.downloadFile(filekey);
+    } 
 
 }

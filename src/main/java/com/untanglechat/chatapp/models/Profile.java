@@ -38,5 +38,8 @@ public class Profile {
     private List<String> roles = new ArrayList<>();
 
     private String publicRSAKey;
+
+    @JsonProperty("profile_picture")
+    private String profilePictureS3ObjectId;
     
 }
