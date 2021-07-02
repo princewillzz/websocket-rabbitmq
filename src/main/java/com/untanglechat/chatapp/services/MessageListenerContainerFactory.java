@@ -1,4 +1,4 @@
-package com.untanglechat.chatapp.configuration;
+package com.untanglechat.chatapp.services;
 
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.listener.MessageListenerContainer;

@@ -1,6 +1,5 @@
 package com.untanglechat.chatapp.services;
 
-import com.untanglechat.chatapp.configuration.MessageListenerContainerFactory;
 import com.untanglechat.chatapp.dto.MessageDTO;
 import com.untanglechat.chatapp.models.ActiveQueueModel;
 import com.untanglechat.chatapp.models.MessageInfoModel;
@@ -81,8 +80,8 @@ public class MessagingService {
      * @param queue
      */
     private void createQueue(final Queue queue) {
-        System.out.println("Created queue: => " + queue);
         rabbitAdmin.declareQueue(queue);
+        System.out.println("Created queue: => " + queue);
     }
 
     
