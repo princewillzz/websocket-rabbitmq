@@ -1,8 +1,9 @@
 package com.untanglechat.chatapp.controller;
 
 import com.untanglechat.chatapp.dto.AuthenticationRequest;
+import com.untanglechat.chatapp.dto.ProfileDTO;
+import com.untanglechat.chatapp.dto.request.RegistrationOTPRequest;
 import com.untanglechat.chatapp.dto.response.TokenResponse;
-import com.untanglechat.chatapp.models.Profile;
 import com.untanglechat.chatapp.security.JwtTokenProvider;
 import com.untanglechat.chatapp.services.ProfileService;
 
@@ -48,7 +49,7 @@ public class AuthController {
 
 
     @PostMapping("/users/register")
-    public Mono<ResponseEntity<?>> registerUser(@RequestBody final Mono<Profile> profileRequest) {
+    public Mono<ResponseEntity<?>> registerUser(@RequestBody final Mono<ProfileDTO> profileRequest) {
 
         return profileRequest
             .flatMap(profile -> {
@@ -60,6 +61,12 @@ public class AuthController {
                     });
                 
             });
+    }
+
+    @PostMapping("/users/register/send-otp")
+    public Mono<Void> sendOTPToVerifymobileNumber(@RequestBody Mono<RegistrationOTPRequest> registrationOTPRequest) {
+
+        return registrationOTPRequest.flatMap(request -> profileService.sendSMSOTPToRegister(request));
     }
 
 }

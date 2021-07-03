@@ -37,6 +37,20 @@
 
 	<dependencies>
 
+			<!-- https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-sns -->
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-sns</artifactId>
+			<version>1.12.16</version>
+		</dependency>
+
+
+		<dependency>
+			<groupId>com.twilio.sdk</groupId>
+			<artifactId>twilio</artifactId>
+			<version>8.15.0</version>
+		</dependency>
+
 		<!-- Maker, to create the API more faster -->
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>

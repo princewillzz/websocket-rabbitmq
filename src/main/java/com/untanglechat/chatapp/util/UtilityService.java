@@ -1,5 +1,7 @@
 package com.untanglechat.chatapp.util;
 
+import java.util.UUID;
+
 import com.untanglechat.chatapp.dto.MessageDTO;
 import com.untanglechat.chatapp.models.MessageInfoModel;
 import com.untanglechat.chatapp.security.JwtTokenProvider;
@@ -51,4 +53,12 @@ public class UtilityService {
         return jwtTokenProvider.extractAllClaims(token);
     }
     
+
+    public String generateOTP(final int size) {
+        String randomString = UUID.randomUUID().toString();
+        if(size > randomString.length()) throw new IllegalArgumentException("OTP size to large");
+        
+        return randomString.substring(randomString.length()-size, randomString.length());
+    }
+
 }

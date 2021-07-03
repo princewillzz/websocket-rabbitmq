@@ -3,11 +3,13 @@ package com.untanglechat.chatapp.controller;
 import com.untanglechat.chatapp.dto.MessageDTO;
 import com.untanglechat.chatapp.repository.MessageRepository;
 import com.untanglechat.chatapp.services.MessagingService;
+import com.untanglechat.chatapp.services.sms.SMSRequest;
+import com.untanglechat.chatapp.services.sms.SmsService;
 
-import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,8 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-
-
+import reactor.core.publisher.Mono;
 
 @RestController
 public class TestController {
@@ -36,6 +37,16 @@ public class TestController {
 
     @Autowired
     private MessageRepository messageRepository;
+
+    @Autowired
+    @Qualifier("AmazonSMSService")
+    private SmsService smsService;
+
+    @PostMapping("/sms")
+    public Mono<Void> sendSMS(@RequestBody Mono<SMSRequest> smsReq) {
+        System.err.println(smsReq);
+        return smsService.sendSMS(smsReq);
+    }
     
 
 
