@@ -113,13 +113,8 @@ public class ProfileService implements ReactiveUserDetailsService{
         final Profile profile = new Profile();
         BeanUtils.copyProperties(profileDTO, profile);
 
-        // Check for basic validation
-        if(profile.getId() != null) throw new UnAcceptableFormDataException("Illegal Data");
-        if(profile.getPublicRSAKey() == null || 
-        profile.getUsername() == null || 
-        profile.getPassword() == null) {
-            throw new UnAcceptableFormDataException("Incomplete data");
-        } 
+        final boolean isProfileDataInvalid = utilityService.isProfileDTOAndModelValid(profileDTO, profile); 
+        if(!isProfileDataInvalid) throw new UnAcceptableFormDataException("Invalid Form Data");
 
         // verify otp
         return verifyOTPOnRegistration(profileDTO.getUsername(), profileDTO.getVerificationOTP())

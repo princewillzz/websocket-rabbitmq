@@ -13,6 +13,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotBlank;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -23,10 +26,21 @@ public class Profile {
     @Id
     private String id;
 
+    @NotNull
+    @NotBlank
     private String username;
 
+
+    @NotNull
+    @NotBlank
     @JsonProperty(access = Access.WRITE_ONLY)
     private String password;
+
+
+    @NotNull
+    @NotBlank
+    @JsonProperty("country_code")
+    private String countryCode;
 
     // @Email
     private String email;
@@ -37,6 +51,9 @@ public class Profile {
     @Builder.Default()
     private List<String> roles = new ArrayList<>();
 
+
+    @NotNull
+    @NotBlank
     private String publicRSAKey;
 
     @JsonProperty("profile_picture")

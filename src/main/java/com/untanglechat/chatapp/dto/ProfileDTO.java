@@ -11,6 +11,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotBlank;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -19,13 +22,27 @@ public class ProfileDTO {
 
     private String id;
 
+    @NotNull
+    @NotBlank
     private String username;
 
+
+    @NotNull
+    @NotBlank
     @JsonProperty(access = Access.WRITE_ONLY)
     private String password;
 
+
+    @JsonProperty(value = "re_password", access = Access.WRITE_ONLY)
+    private String rePassword;
+
     // @Email
     private String email;
+
+    @NotNull
+    @NotBlank
+    @JsonProperty("country_code")
+    private String countryCode;
 
     @Builder.Default()
     private boolean active = true;
@@ -33,6 +50,9 @@ public class ProfileDTO {
     @Builder.Default()
     private List<String> roles = new ArrayList<>();
 
+
+    @NotNull
+    @NotBlank
     private String publicRSAKey;
 
     @JsonProperty("profile_picture")

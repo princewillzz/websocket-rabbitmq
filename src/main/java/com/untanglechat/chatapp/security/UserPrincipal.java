@@ -27,6 +27,10 @@ public class UserPrincipal implements UserDetails{
         return profile.getPublicRSAKey();
     }
 
+    public String getCountryCode() {
+        return profile.getCountryCode();
+    }
+
     public String getProfileImageS3ObjectId() {
         return profile.getProfilePictureS3ObjectId();
     }

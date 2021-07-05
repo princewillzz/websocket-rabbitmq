@@ -1,9 +1,18 @@
 package com.untanglechat.chatapp.util;
 
+import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.PostConstruct;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+
 import com.untanglechat.chatapp.dto.MessageDTO;
+import com.untanglechat.chatapp.dto.ProfileDTO;
+import com.untanglechat.chatapp.exceptions.UnAcceptableFormDataException;
 import com.untanglechat.chatapp.models.MessageInfoModel;
+import com.untanglechat.chatapp.models.Profile;
 import com.untanglechat.chatapp.security.JwtTokenProvider;
 
 import org.springframework.http.HttpHeaders;
@@ -18,6 +27,13 @@ import lombok.RequiredArgsConstructor;
 public class UtilityService {
 
     private final JwtTokenProvider jwtTokenProvider;
+
+    private Validator validator;
+
+    @PostConstruct
+    void postConstruct() {
+        this.validator = Validation.buildDefaultValidatorFactory().getValidator();
+    }
 
     /**
      * Generate an object from messageDTO object of MessageInfoModel
@@ -59,6 +75,28 @@ public class UtilityService {
         if(size > randomString.length()) throw new IllegalArgumentException("OTP size to large");
         
         return randomString.substring(randomString.length()-size, randomString.length());
+    }
+
+
+    public boolean isProfileDTOAndModelValid(final ProfileDTO profileDTO, final Profile profile) throws UnAcceptableFormDataException {
+        
+        Set<ConstraintViolation<ProfileDTO>> profileDTOErrors = validator.validate(profileDTO);
+        Set<ConstraintViolation<Profile>> profileErrors = validator.validate(profile);
+
+        if(profileDTOErrors.size() > 0 || profileErrors.size() > 0) {
+            throw new UnAcceptableFormDataException("Invalid Details!!");
+        }
+
+        if(profile.getId() != null || !profileDTO.getPassword().equals(profileDTO.getRePassword())) 
+            throw new UnAcceptableFormDataException("Illegal Data!!");
+
+        if(!profileDTO.getPassword().equals(profileDTO.getRePassword())) 
+            throw new UnAcceptableFormDataException("Password does not match");
+
+        if(profileDTO.getVerificationOTP() == null || profileDTO.getVerificationOTP().isBlank()) 
+            throw new UnAcceptableFormDataException("Invalid OTP!!");
+
+        return true;
     }
 
 }

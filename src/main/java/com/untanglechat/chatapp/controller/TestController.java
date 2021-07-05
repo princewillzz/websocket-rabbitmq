@@ -1,6 +1,14 @@
 package com.untanglechat.chatapp.controller;
 
+import java.util.Set;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Validation;
+import javax.validation.Validator;
+
 import com.untanglechat.chatapp.dto.MessageDTO;
+import com.untanglechat.chatapp.dto.ProfileDTO;
 import com.untanglechat.chatapp.repository.MessageRepository;
 import com.untanglechat.chatapp.services.MessagingService;
 import com.untanglechat.chatapp.services.sms.SMSRequest;
@@ -114,10 +122,22 @@ public class TestController {
     @GetMapping("/secured/auth/authenticate")
     public String securedHello() {return "hello";}
 
-    @GetMapping(value="/test/{id}")
-    public Object sdatst(@PathVariable String id) {
-       
-        return messageRepository.existsByRoutingKey(id);
+    Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+    
+
+    @GetMapping(value="/test")
+    public Object sdatst(@RequestBody ProfileDTO p) {
+
+
+        Set<ConstraintViolation<ProfileDTO>> cs = validator.validate(p);
+        if(cs.size()> 0) {
+            throw new ConstraintViolationException(cs);
+        }
+        
+
+        System.out.println();
+
+        return p;
     }
     
 
