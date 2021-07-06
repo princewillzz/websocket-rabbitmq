@@ -188,12 +188,9 @@ public class ProfileService implements ReactiveUserDetailsService{
                 final SMSRequest smsRequest = new SMSRequest();
                 smsRequest.setPhoneNumber(registerProfileOTP.getPhoneNumber());
                 
-                final StringBuffer message = new StringBuffer()
-                    .append("Your OTP to register UntangleChat is ")
-                    .append(OTP)
-                    .append(". It will be valid for 5 minutes.- UntangledChat");
+                final String message = String.format("Your OTP is %s.", OTP);                    
                 
-                smsRequest.setMessage(message.toString());
+                smsRequest.setMessage(message);
 
                 smsService.sendSMS(Mono.just(smsRequest)).subscribe();
             }).then();

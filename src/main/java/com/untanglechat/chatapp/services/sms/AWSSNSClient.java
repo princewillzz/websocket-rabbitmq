@@ -48,7 +48,7 @@ public class AWSSNSClient implements SmsService {
     public Mono<Void> sendSMS(Mono<SMSRequest> smsRequest) {
         AmazonSNSAsync snsClient = AmazonSNSAsyncClient
             .asyncBuilder()
-            .withRegion(Regions.US_EAST_1)
+            .withRegion(Regions.AP_SOUTH_1)
             .build();
 
         Map<String, MessageAttributeValue> smsAttributes = new HashMap<>();
@@ -81,7 +81,9 @@ public class AWSSNSClient implements SmsService {
 
                     @Override
                     public void onSuccess(PublishRequest request, PublishResult result) {
-                        log.info("Message Successfully sent", result.getMessageId());                     
+                        log.info("Message Successfully sent!! to "+ sms.getPhoneNumber() + " ==> " + result.getMessageId());  
+                        System.out.println(result);  
+                        System.out.println(request);                 
                     }
                     
                 });
