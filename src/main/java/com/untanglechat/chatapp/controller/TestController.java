@@ -50,6 +50,12 @@ public class TestController {
     @Qualifier("AmazonSMSService")
     private SmsService smsService;
 
+    @GetMapping("/api/queue/awake")
+    public Mono<Boolean> isQueueConnected () {
+        return Mono.just(rabbitAdmin.getQueueInfo("queueName")==null? false: true);
+    }
+
+
     @PostMapping("/sms")
     public Mono<Void> sendSMS(@RequestBody Mono<SMSRequest> smsReq) {
         System.err.println(smsReq);
@@ -94,6 +100,7 @@ public class TestController {
         return message;
     }
     
+
 
 
 

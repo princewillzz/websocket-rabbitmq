@@ -1,6 +1,7 @@
 package com.untanglechat.chatapp.controller;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
@@ -51,8 +52,13 @@ public class UserController {
         return profileService.getProfileByUsername(username);
     }
 
+    @PostMapping("/secured/users/exists")
+    public Flux<Profile> checkListOfUserExistsAndSendInfo(@RequestBody final Mono<List<String>> usernames) {
+        return profileService.getProfilesByUsernames(usernames);
+    }
+
     @PutMapping("/secured/users/rsa-public-key")
-    public Mono<Profile> updateRSAToken(@RequestBody final RsaTokenUpdateRequest request, @RequestHeader final HttpHeaders headers) {
+    public Mono<Profile> updateRSAToken(@RequestBody final Mono<RsaTokenUpdateRequest> request, @RequestHeader final HttpHeaders headers) {
 
         final Claims claims = utilityService.extractAllClaimsFromRequest(headers);
         final String subject = claims.getSubject();
@@ -63,8 +69,6 @@ public class UserController {
 
     @GetMapping(path="users/profile-photo/{filekey}")
     public Mono<ResponseEntity<Flux<ByteBuffer>>> downloadFile(@PathVariable("filekey") String filekey) {    
-        
-        System.err.println("Fetching profile db");
         
         return profileService.downloadProfilePicture(filekey)
             .map(response -> {

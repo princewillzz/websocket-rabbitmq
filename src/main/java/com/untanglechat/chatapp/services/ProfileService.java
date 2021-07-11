@@ -2,6 +2,7 @@ package com.untanglechat.chatapp.services;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.List;
 
 import com.untanglechat.chatapp.dto.ProfileDTO;
 import com.untanglechat.chatapp.dto.request.RegistrationOTPRequest;
@@ -102,6 +103,12 @@ public class ProfileService implements ReactiveUserDetailsService{
         return profileRepository.findByUsername(username).switchIfEmpty(Mono.error(() ->  new NoUserFoundException("User Does not exists")));
     }
 
+    public Flux<Profile> getProfilesByUsernames(final Mono<List<String>> usernames) {
+    
+       return profileRepository.findAllByUsernameIn(usernames);
+       
+    }
+
     public Flux<Profile> getAllProfiles(){
 
         return profileRepository.findAll();
@@ -198,12 +205,13 @@ public class ProfileService implements ReactiveUserDetailsService{
     }
 
 
-    public Mono<Profile> updatePublicRSATokenForSubject(final String subject, final RsaTokenUpdateRequest tokenUpdateRequest) {
+    public Mono<Profile> updatePublicRSATokenForSubject(final String subject, final Mono<RsaTokenUpdateRequest> tokenUpdateRequest) {
         return this.getProfileByUsername(subject)
-            .flatMap(profile -> {
-                profile.setPublicRSAKey(tokenUpdateRequest.getRsaPublicKey());
-                return this.profileRepository.save(profile);                
-            });
+            .flatMap(profile -> tokenUpdateRequest.flatMap(tokenUpdate -> {
+                        profile.setPublicRSAKey(tokenUpdate.getRsaPublicKey());
+                        return this.profileRepository.save(profile);  
+                    })              
+            );
     }
 
 
