@@ -1,0 +1,4 @@
+wget https://untanglechat-user-profile.s3.ap-south-1.amazonaws.com/chatapp-0.0.1-SNAPSHOT.jar
+sudo systemctl start docker
+sudo docker run --rm --hostname my-rabbit --name some-rabbit -d -p 15672:15672 -p 5671:5672 rabbitmq:3-management
+nohup java -jar chatapp-0.0.1-SNAPSHOT.jar > output.log &
